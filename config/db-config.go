@@ -29,5 +29,5 @@ func getDb() *gorm.DB {
 
 func init() {
 	DB = getDb()
-	DB.AutoMigrate(&entity.User{})
+	DB.AutoMigrate(&entity.User{}, &entity.Role{})
 }

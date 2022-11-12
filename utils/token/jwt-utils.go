@@ -67,7 +67,7 @@ func ParseTokenFormToUsername(token string) string {
 		return []byte(common.TokenSigningKey), nil
 	})
 	if err != nil {
-		panic(err)
+		return ""
 	}
 
 	valid := claims.Valid

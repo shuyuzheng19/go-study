@@ -57,12 +57,23 @@ func GlobalFilter() gin.HandlerFunc {
 		if accessToken != "" && accessToken == resultToken {
 			resultUser := userService.FindByUsername(username)
 
-			for _, r := range currentUri.Role {
-				if r == resultUser.Role {
-					context.Next()
-					return
-				}
+			var existsRole, existsPermission = false, false
+
+			existsRole = hasRole(currentUri.Role, resultUser.Role.Name)
+
+			var permissions = make([]string, len(currentUri.Permission))
+
+			for i, permission := range resultUser.Permissions {
+				permissions[i] = permission.Name
 			}
+
+			existsPermission = hasPermission(currentUri.Permission, permissions)
+
+			if existsRole && existsPermission {
+				context.Next()
+				return
+			}
+
 		}
 
 		context.JSON(http.StatusForbidden, common.BuildFailure("你没有权限访问"))
@@ -70,6 +81,40 @@ func GlobalFilter() gin.HandlerFunc {
 		context.Abort()
 	}
 
+}
+
+func hasPermission(permissions []string, userPermission []string) bool {
+
+	if len(permissions) == 0 || len(userPermission) == 0 {
+		return false
+	}
+
+	var map1, map2 = make(map[string]int), make(map[string]int)
+
+	for i, permission := range permissions {
+		map1[permission] = i
+	}
+
+	for i, permission := range userPermission {
+		map2[permission] = i
+	}
+
+	for key, _ := range map1 {
+		if _, ok := map2[key]; ok {
+			return true
+		}
+	}
+
+	return false
+}
+
+func hasRole(roles []string, roleName string) bool {
+	for _, r := range roles {
+		if r == roleName {
+			return true
+		}
+	}
+	return false
 }
 
 func findWhiteUris(uris []filterChain, str string) int {
